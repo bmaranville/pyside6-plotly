@@ -160,10 +160,6 @@ class PlotlyQtWidget(QWebEngineView):
         </html>
         '''
 
-        # Load the HTML content directly
-        with open("test.html", "w") as f:
-            f.write(html_content)
-
         self.setHtml(html_content)
         self.html_content = html_content
         self.plot_initialized = True
