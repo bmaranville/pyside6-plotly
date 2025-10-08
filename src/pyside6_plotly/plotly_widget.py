@@ -45,6 +45,11 @@ class PlotlyCallbacks(QObject):
             signal_attr.emit(data)
         self.all_plotly_events.emit(event_type, data)
 
+    @Slot(result=str)
+    def get_plotlyjs(self):
+        """ Plotly.js is too big to be sent as a data url, so provide it via this method """
+        return plotly.offline.get_plotlyjs()
+
 
 class PlotlyQtWidget(QWebEngineView):
     def __init__(self, parent=None):
@@ -55,11 +60,6 @@ class PlotlyQtWidget(QWebEngineView):
         self.callbacks = PlotlyCallbacks()
         self.channel.registerObject("callbacks", self.callbacks)
         self.page().setWebChannel(self.channel)
-
-        # Get Plotly.js content from the Python library
-        self.plotly_js = plotly.offline.get_plotlyjs()
-        # Load Plotly.js from CDN
-        self.plotly_js_url = "https://cdn.plot.ly/plotly-3.0.1.min.js"
 
         # Flag to track if the plot has been initialized
         self.plot_initialized = False
@@ -76,7 +76,6 @@ class PlotlyQtWidget(QWebEngineView):
         <html>
         <head>
             <meta charset="utf-8" />
-            <script src="{self.plotly_js_url}"></script>
             <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
             <style>
                 body, html {{ margin: 0; padding: 0; height: 100%; }}
@@ -93,8 +92,14 @@ class PlotlyQtWidget(QWebEngineView):
                 const plotDiv = document.getElementById('plot');
 
                 document.addEventListener("DOMContentLoaded", function() {{
-                    new QWebChannel(qt.webChannelTransport, function(channel) {{
+                    new QWebChannel(qt.webChannelTransport, async function(channel) {{
                         callbacks = channel.objects.callbacks;
+
+                        // Load Plotly.js dynamically
+                        const plotlyScript = document.createElement('script');
+                        plotlyScript.type = 'text/javascript';
+                        plotlyScript.text = await callbacks.get_plotlyjs();
+                        document.head.appendChild(plotlyScript);
 
                         function set_handlers(el) {{
                             // forward events
