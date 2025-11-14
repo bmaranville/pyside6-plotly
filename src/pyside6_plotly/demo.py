@@ -2,7 +2,7 @@ import json
 import sys
 
 from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLabel
-from plotly_widget import PlotlyQtWidget
+from .plotly_widget import PlotlyQtWidget
 import plotly.graph_objects as go
 
 class DemoWidget(QWidget):
